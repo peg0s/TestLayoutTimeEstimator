@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,12 +21,65 @@ namespace TestLayoutTimeEstimator.Views
         public MainWindow()
         {
             InitializeComponent();
+            // Подписываемся на событие закрытия окна
+            this.Closing += MainWindow_Closing;
+        }
+
+        /// <summary>
+        /// Обработчик закрытия окна — проверяем наличие несохранённых изменений
+        /// </summary>
+        private async void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            if (DataContext is MainViewModel vm && vm.IsDirty)
+            {
+                var result = MessageBox.Show(
+                    "Проект содержит несохранённые изменения. Сохранить перед выходом?",
+                    "Несохранённые изменения",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    // Сохраняем проект
+                    vm.SaveProjectCommand.Execute(null);
+
+                    // Если после сохранения флаг всё ещё dirty — значит, сохранение отменено или не удалось
+                    if (vm.IsDirty)
+                    {
+                        e.Cancel = true; // Отменяем закрытие
+                        return;
+                    }
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    e.Cancel = true; // Отменяем закрытие
+                    return;
+                }
+                // Если No — закрываем без сохранения
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Находим Canvas внутри ItemsControl после полной загрузки шаблона
             _layoutCanvas = FindVisualChild<Canvas>(MainItemsControl);
+
+            // Привязываем заголовок окна к свойству ViewModel
+            if (DataContext is MainViewModel vm)
+            {
+                this.DataContextChanged += (s, args) =>
+                {
+                    if (DataContext is MainViewModel newVm)
+                    {
+                        var binding = new System.Windows.Data.Binding("WindowTitle");
+                        this.SetBinding(Window.TitleProperty, binding);
+                    }
+                };
+
+                // Устанавливаем привязку заголовка
+                var titleBinding = new System.Windows.Data.Binding("WindowTitle");
+                this.SetBinding(Window.TitleProperty, titleBinding);
+            }
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

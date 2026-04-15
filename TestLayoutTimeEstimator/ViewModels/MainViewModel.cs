@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
 using TestLayoutTimeEstimator.Models;
@@ -22,6 +23,7 @@ namespace TestLayoutTimeEstimator.ViewModels
         private double _totalScore;
         private string _statusMessage;
         private bool _fitImageToCanvas = true;
+        private bool _isDirty; // Флаг несохранённых изменений
 
         private readonly IDatabaseService _databaseService;
         private PropertyChangedEventHandler _projectPropertyChangedHandler;
@@ -35,7 +37,7 @@ namespace TestLayoutTimeEstimator.ViewModels
         public ICommand SaveProjectCommand { get; }
         public ICommand LoadProjectCommand { get; }
         public ICommand ClearAllCommand { get; }
-        public ICommand NewProjectCommand { get; }   // Новая команда
+        public ICommand NewProjectCommand { get; }
 
         public MainViewModel()
         {
@@ -54,9 +56,10 @@ namespace TestLayoutTimeEstimator.ViewModels
             SaveProjectCommand = new RelayCommand(SaveProject);
             LoadProjectCommand = new RelayCommand(LoadProject);
             ClearAllCommand = new RelayCommand(ClearAll);
-            NewProjectCommand = new RelayCommand(NewProject);   // инициализация
+            NewProjectCommand = new RelayCommand(NewProject);
 
             Recalculate();
+            IsDirty = false; // Начальное состояние — чистое
         }
 
         // ===== Свойства =====
@@ -85,7 +88,7 @@ namespace TestLayoutTimeEstimator.ViewModels
 
                 OnPropertyChanged(nameof(CurrentProject));
                 OnPropertyChanged(nameof(CurrentProject.ImagePath));
-                OnPropertyChanged(nameof(ElementsCount));   // обновляем счётчик
+                OnPropertyChanged(nameof(ElementsCount));
                 Recalculate();
             }
         }
@@ -128,6 +131,7 @@ namespace TestLayoutTimeEstimator.ViewModels
                     if (_selectedElement.Type != _selectedElementType.Name)
                     {
                         _selectedElement.Type = _selectedElementType.Name;
+                        IsDirty = true; // Изменение типа элемента
                     }
                 }
             }
@@ -216,12 +220,37 @@ namespace TestLayoutTimeEstimator.ViewModels
             }
         }
 
+        /// <summary>
+        /// Флаг наличия несохранённых изменений
+        /// </summary>
+        public bool IsDirty
+        {
+            get => _isDirty;
+            set
+            {
+                if (_isDirty != value)
+                {
+                    _isDirty = value;
+                    OnPropertyChanged(nameof(IsDirty));
+                    OnPropertyChanged(nameof(WindowTitle)); // Обновляем заголовок окна
+                }
+            }
+        }
+
+        /// <summary>
+        /// Заголовок окна с индикатором несохранённых изменений
+        /// </summary>
+        public string WindowTitle => IsDirty ? $"{CurrentProject?.Name}* - Layout Time Estimator" : $"{CurrentProject?.Name} - Layout Time Estimator";
+
         // ===== Подписки на события =====
 
         private void SubscribeToProjectEvents()
         {
             _projectPropertyChangedHandler = (s, e) =>
             {
+                // Любое изменение свойств проекта помечает его как изменённый
+                IsDirty = true;
+
                 if (e.PropertyName == nameof(ProjectEstimation.AdaptivityMultiplier) ||
                     e.PropertyName == nameof(ProjectEstimation.HoursPerPoint) ||
                     e.PropertyName == nameof(ProjectEstimation.BaseHours))
@@ -232,10 +261,16 @@ namespace TestLayoutTimeEstimator.ViewModels
                 {
                     OnPropertyChanged(nameof(CurrentProject));
                 }
+                else if (e.PropertyName == nameof(ProjectEstimation.Name))
+                {
+                    OnPropertyChanged(nameof(WindowTitle)); // Обновляем заголовок при смене имени
+                }
             };
 
             _elementsCollectionChangedHandler = (s, e) =>
             {
+                IsDirty = true; // Добавление/удаление элементов
+
                 if (e.NewItems != null)
                 {
                     foreach (LayoutElement element in e.NewItems)
@@ -256,8 +291,14 @@ namespace TestLayoutTimeEstimator.ViewModels
 
             _elementPropertyChangedHandler = (s, e) =>
             {
+                IsDirty = true; // Изменение свойств элемента
+
                 if (e.PropertyName == nameof(LayoutElement.Type) ||
-                    e.PropertyName == nameof(LayoutElement.HasAnimation))
+                    e.PropertyName == nameof(LayoutElement.HasAnimation) ||
+                    e.PropertyName == nameof(LayoutElement.X) ||
+                    e.PropertyName == nameof(LayoutElement.Y) ||
+                    e.PropertyName == nameof(LayoutElement.Width) ||
+                    e.PropertyName == nameof(LayoutElement.Height))
                 {
                     Recalculate();
                 }
@@ -301,6 +342,7 @@ namespace TestLayoutTimeEstimator.ViewModels
             CurrentProject.Elements.Add(element);
             SelectedElement = element;
             StatusMessage = $"Добавлен элемент: {element.DisplayName}";
+            // IsDirty уже устанавливается в обработчике CollectionChanged
         }
 
         private bool CanAddElement(object parameter) => CurrentProject != null;
@@ -309,9 +351,11 @@ namespace TestLayoutTimeEstimator.ViewModels
         {
             if (SelectedElement != null)
             {
+                var elementName = SelectedElement.DisplayName;
                 CurrentProject.Elements.Remove(SelectedElement);
                 SelectedElement = CurrentProject.Elements.FirstOrDefault();
-                StatusMessage = "Элемент удалён";
+                StatusMessage = $"Элемент удалён: {elementName}";
+                // IsDirty уже устанавливается в обработчике CollectionChanged
             }
         }
 
@@ -329,6 +373,7 @@ namespace TestLayoutTimeEstimator.ViewModels
                 CurrentProject.ImagePath = dialog.FileName;
                 StatusMessage = $"Загружено изображение: {System.IO.Path.GetFileName(dialog.FileName)}";
                 OnPropertyChanged(nameof(CurrentProject));
+                // IsDirty уже устанавливается в обработчике PropertyChanged проекта
             }
         }
 
@@ -339,6 +384,7 @@ namespace TestLayoutTimeEstimator.ViewModels
                 CurrentProject.ImagePath = null;
                 StatusMessage = "Изображение удалено";
                 OnPropertyChanged(nameof(CurrentProject));
+                // IsDirty уже устанавливается в обработчике PropertyChanged проекта
             }
         }
 
@@ -355,6 +401,7 @@ namespace TestLayoutTimeEstimator.ViewModels
                 try
                 {
                     await ProjectFileService.SaveProjectAsync(dialog.FileName, CurrentProject);
+                    IsDirty = false; // Сбрасываем флаг после успешного сохранения
                     StatusMessage = $"Проект сохранён: {dialog.FileName}";
                 }
                 catch (Exception ex)
@@ -366,6 +413,31 @@ namespace TestLayoutTimeEstimator.ViewModels
 
         private async void LoadProject(object parameter)
         {
+            // Проверяем наличие несохранённых изменений
+            if (IsDirty)
+            {
+                var result = MessageBox.Show(
+                    "Текущий проект содержит несохранённые изменения. Сохранить перед загрузкой?",
+                    "Несохранённые изменения",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SaveProjectCommand.Execute(null);
+                    // Если сохранение отменено или не удалось, продолжаем или выходим
+                    if (IsDirty) // Если после сохранения флаг остался true — значит, сохранение отменено
+                    {
+                        return;
+                    }
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return; // Отменяем загрузку
+                }
+                // Если No — продолжаем без сохранения
+            }
+
             var dialog = new OpenFileDialog
             {
                 Filter = "Проект LayoutEstimator|*.lproj|Все файлы|*.*",
@@ -377,6 +449,7 @@ namespace TestLayoutTimeEstimator.ViewModels
                 {
                     var project = await ProjectFileService.LoadProjectAsync(dialog.FileName);
                     CurrentProject = project;
+                    IsDirty = false; // Загруженный проект считается чистым
                     StatusMessage = $"Проект загружен: {dialog.FileName}";
                 }
                 catch (Exception ex)
@@ -390,23 +463,49 @@ namespace TestLayoutTimeEstimator.ViewModels
         {
             if (CurrentProject.Elements.Any())
             {
-                var result = System.Windows.MessageBox.Show(
-                    "Закрыть не сохраненный проект??",
+                var result = MessageBox.Show(
+                    "Удалить все элементы с макета?",
                     "Подтверждение",
-                    System.Windows.MessageBoxButton.YesNo);
-                if (result == System.Windows.MessageBoxResult.Yes)
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
                 {
                     CurrentProject.Elements.Clear();
                     SelectedElement = null;
                     StatusMessage = "Все элементы удалены";
+                    // IsDirty уже устанавливается в обработчике CollectionChanged
                 }
             }
         }
 
         private void NewProject(object parameter)
         {
+            // Проверяем наличие несохранённых изменений
+            if (IsDirty)
+            {
+                var result = MessageBox.Show(
+                    "Текущий проект содержит несохранённые изменения. Сохранить перед созданием нового?",
+                    "Несохранённые изменения",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SaveProjectCommand.Execute(null);
+                    if (IsDirty) // Сохранение отменено
+                    {
+                        return;
+                    }
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return; // Отменяем создание нового проекта
+                }
+            }
+
             var newProject = new ProjectEstimation { Name = "Новый проект" };
             CurrentProject = newProject;
+            IsDirty = false; // Новый проект считается чистым
             StatusMessage = "Создан новый проект";
         }
 
@@ -451,7 +550,9 @@ namespace TestLayoutTimeEstimator.ViewModels
                 .FirstOrDefault(c => c.MinScore <= TotalScore &&
                     (c.MaxScore == null || TotalScore <= c.MaxScore));
             if (category != null)
+            {
                 CurrentProject.ComplexityCategoryId = category.Id;
+            }
 
             OnPropertyChanged(nameof(CurrentComplexityCategory));
         }
