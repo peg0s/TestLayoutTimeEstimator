@@ -23,7 +23,7 @@ namespace TestLayoutTimeEstimator.ViewModels
         private double _totalScore;
         private string _statusMessage;
         private bool _fitImageToCanvas = true;
-        private bool _isDirty; // Флаг несохранённых изменений
+        private bool _isDirty; // Флаг несохранённых изменений 
 
         private readonly IDatabaseService _databaseService;
         private PropertyChangedEventHandler _projectPropertyChangedHandler;

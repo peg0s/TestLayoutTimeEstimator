@@ -27,17 +27,7 @@
         <conv:IsNotNullConverter x:Key="IsNotNullConverter"/>
         <conv:BooleanToStretchConverter x:Key="BooleanToStretchConverter"/>
 
-        <!-- Цвета дашборда -->
-        <Color x:Key="PrimaryBlue">#4361EE</Color>
-        <Color x:Key="PrimaryLightBlue">#4895EF</Color>
-        <Color x:Key="SuccessGreen">#4CC9F0</Color>
-        <Color x:Key="WarningOrange">#F8961E</Color>
-        <Color x:Key="SoftPurple">#7209B7</Color>
-        <Color x:Key="DarkGray">#2B2D42</Color>
-        <Color x:Key="MediumGray">#4A4E69</Color>
-        <Color x:Key="LightGray">#8D99AE</Color>
-        <Color x:Key="OffWhite">#EDF2F4</Color>
-
+        <!-- Цвета дашборда (статические кисти) -->
         <SolidColorBrush x:Key="PrimaryBlueBrush" Color="#4361EE"/>
         <SolidColorBrush x:Key="PrimaryLightBlueBrush" Color="#4895EF"/>
         <SolidColorBrush x:Key="SuccessGreenBrush" Color="#4CC9F0"/>
@@ -48,10 +38,20 @@
         <SolidColorBrush x:Key="LightGrayBrush" Color="#8D99AE"/>
         <SolidColorBrush x:Key="OffWhiteBrush" Color="#EDF2F4"/>
 
+        <!-- Динамические кисти (для совместимости с темами, но пока статические) -->
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#F5F7FA"/>
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="White"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#E0E5ED"/>
+        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#2B2D42"/>
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#8D99AE"/>
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#4361EE"/>
+        <SolidColorBrush x:Key="PrimaryLightBrush" Color="#4895EF"/>
+        <SolidColorBrush x:Key="WarningBrush" Color="#F8961E"/>
+
         <!-- Стиль для карточек дашборда -->
         <Style x:Key="DashboardCard" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E0E5ED"/>
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Effect">
@@ -65,13 +65,13 @@
         <Style x:Key="CardHeaderText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#2B2D42"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
             <Setter Property="Margin" Value="0,0,0,15"/>
         </Style>
 
         <!-- Стиль для кнопок дашборда -->
         <Style x:Key="DashboardButton" TargetType="Button">
-            <Setter Property="Background" Value="#4361EE"/>
+            <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="15,8"/>
@@ -91,19 +91,19 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#4895EF"/>
+                    <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#2B2D42"/>
+                    <Setter Property="Background" Value="{StaticResource DarkGrayBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <!-- Стиль для второстепенных кнопок -->
         <Style x:Key="SecondaryDashboardButton" TargetType="Button" BasedOn="{StaticResource DashboardButton}">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="#4361EE"/>
-            <Setter Property="BorderBrush" Value="#4361EE"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -120,7 +120,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F5F7FA"/>
+                    <Setter Property="Background" Value="{StaticResource OffWhiteBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -129,24 +129,25 @@
         <Style x:Key="MetricValueText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="28"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#2B2D42"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         </Style>
         <Style x:Key="MetricLabelText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="#8D99AE"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}"/>
             <Setter Property="Margin" Value="0,5,0,0"/>
         </Style>
         <Style x:Key="PositiveChangeText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#4CC9F0"/>
+            <Setter Property="Foreground" Value="{StaticResource SuccessGreenBrush}"/>
             <Setter Property="Margin" Value="5,0,0,0"/>
         </Style>
 
         <!-- Стиль для текстовых полей (ModernTextBox) -->
         <Style x:Key="ModernTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E0E5ED"/>
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="8,5"/>
             <Setter Property="FontSize" Value="13"/>
@@ -164,15 +165,16 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="#4361EE"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <!-- Стиль для списка (ModernListBox) -->
         <Style x:Key="ModernListBox" TargetType="ListBox">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E0E5ED"/>
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
@@ -181,7 +183,8 @@
                     <ControlTemplate TargetType="ListBox">
                         <Border BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                                CornerRadius="6"
+                                Background="{TemplateBinding Background}">
                             <ScrollViewer Focusable="False" Padding="2">
                                 <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                             </ScrollViewer>
@@ -190,9 +193,88 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Стиль для подсветки ошибок в текстовых полях -->
+        <Style x:Key="ValidatingTextBox" TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+            <Setter Property="Validation.ErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <StackPanel>
+                            <AdornedElementPlaceholder x:Name="adorner"/>
+                            <TextBlock Text="{Binding ElementName=adorner, Path=AdornedElement.(Validation.Errors)[0].ErrorContent}"
+                                       Foreground="#F44336" 
+                                       FontSize="11" 
+                                       Margin="0,2,0,0"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="BorderBrush" Value="#F44336"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Упрощённый стиль для ComboBox (без DynamicResource, использует статические кисти) -->
+        <Style x:Key="ValidatingComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <Grid>
+                                <ToggleButton x:Name="ToggleButton" 
+                                              Background="Transparent"
+                                              BorderThickness="0"
+                                              HorizontalAlignment="Right"
+                                              Width="20"
+                                              IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                    <Path Data="M0,0 L4,4 L8,0" Fill="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </ToggleButton>
+                                <TextBlock x:Name="DisplayText" 
+                                           Text="{Binding SelectedItem.DisplayName, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Margin="8,5"
+                                           VerticalAlignment="Center"/>
+                                <Popup x:Name="Popup" 
+                                       IsOpen="{TemplateBinding IsDropDownOpen}"
+                                       Placement="Bottom"
+                                       Focusable="False"
+                                       AllowsTransparency="True">
+                                    <Border Background="{StaticResource CardBackgroundBrush}" 
+                                            BorderBrush="{StaticResource BorderBrush}" 
+                                            BorderThickness="1" CornerRadius="6" Padding="2">
+                                        <ScrollViewer MaxHeight="200">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="BorderBrush" Value="#F44336"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                    <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
-    <Border Background="#F5F7FA" CornerRadius="18" Padding="20">
+    <Border Background="{StaticResource BackgroundBrush}" CornerRadius="18" Padding="20">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -208,7 +290,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="📊 Dashboard" FontSize="24" FontWeight="Bold" Foreground="#2B2D42" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="📊 Dashboard" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <Button Style="{StaticResource SecondaryDashboardButton}" Command="{Binding SaveProjectCommand}" Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">
@@ -249,10 +331,7 @@
                                      SelectedItem="{Binding SelectedElement}"
                                      DisplayMemberPath="DisplayName"
                                      Height="150"
-                                     Style="{StaticResource ModernListBox}"
-                                     Background="White"
-                                     BorderBrush="#E0E5ED"
-                                     BorderThickness="1"/>
+                                     Style="{StaticResource ModernListBox}"/>
                         </ScrollViewer>
                     </StackPanel>
                 </Border>
@@ -261,23 +340,23 @@
                 <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Padding="20" Margin="15,0,15,0">
                     <StackPanel>
                         <TextBlock Text="📁 Детали проекта" Style="{StaticResource CardHeaderText}"/>
-                        <TextBlock Text="Название проекта" Foreground="#8d99ae" FontSize="12" Margin="0,0,0,3"/>
-                        <TextBox Text="{Binding CurrentProject.Name, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource ModernTextBox}" Margin="0,0,0,15"/>
+                        <TextBlock Text="Название проекта" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,3"/>
+                        <TextBox Text="{Binding CurrentProject.Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                 Style="{StaticResource ValidatingTextBox}" Margin="0,0,0,15"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Час за 1 балл" Foreground="#8d99ae" Margin="0,0,0,3"/>
-                                <TextBox Text="{Binding CurrentProject.HoursPerPoint, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource ModernTextBox}"/>
+                                <TextBlock Text="Час за 1 балл" Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,3"/>
+                                <TextBox Text="{Binding CurrentProject.HoursPerPoint, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                        Style="{StaticResource ValidatingTextBox}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="Базовые часы" Foreground="#8d99ae" Margin="10,0,0,3"/>
-                                <TextBox Text="{Binding CurrentProject.BaseHours, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource ModernTextBox}" Width="120" Margin="10,0,0,0"/>
+                                <TextBlock Text="Базовые часы" Foreground="{StaticResource SecondaryTextBrush}" Margin="10,0,0,3"/>
+                                <TextBox Text="{Binding CurrentProject.BaseHours, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                         Style="{StaticResource ValidatingTextBox}" Width="120" Margin="10,0,0,0"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -297,12 +376,12 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Март 14" Foreground="#8D99AE" FontSize="13" Margin="0,0,0,10"/>
+                                <TextBlock Text="Март 14" Foreground="{StaticResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,10"/>
                                 <TextBlock Text="{Binding CurrentComplexityCategory.Name}" Style="{StaticResource MetricValueText}"/>
                                 <TextBlock Text="Сложность" Style="{StaticResource MetricLabelText}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text=" " Foreground="#8D99AE" FontSize="13" Margin="0,0,0,10"/>
+                                <TextBlock Text=" " Foreground="{StaticResource SecondaryTextBrush}" FontSize="13" Margin="0,0,0,10"/>
                                 <TextBlock Text="{Binding ElementsCount}" Style="{StaticResource MetricValueText}" HorizontalAlignment="Center"/>
                                 <TextBlock Text="Всего элементов" Style="{StaticResource MetricLabelText}"/>
                             </StackPanel>
@@ -331,11 +410,11 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="0.42%" Foreground="#F8961E" FontWeight="Bold" FontSize="20"/>
+                                <TextBlock Text="0.42%" Foreground="{StaticResource WarningOrangeBrush}" FontWeight="Bold" FontSize="20"/>
                                 <TextBlock Text="Сохранение" Style="{StaticResource MetricLabelText}" FontSize="12"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                <TextBlock Text="{Binding CurrentProject.BaseHours}" Foreground="#7209B7" FontWeight="Bold" FontSize="16" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding CurrentProject.BaseHours}" Foreground="{StaticResource SoftPurpleBrush}" FontWeight="Bold" FontSize="16" HorizontalAlignment="Right"/>
                                 <TextBlock Text="Базовые часы" Style="{StaticResource MetricLabelText}" FontSize="12" HorizontalAlignment="Right"/>
                             </StackPanel>
                         </Grid>
@@ -363,7 +442,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0" Text="📐 Холст" FontSize="16" FontWeight="SemiBold" Foreground="#2B2D42"/>
+                            <TextBlock Grid.Column="0" Text="📐 Холст" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}"/>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                 <Button Style="{StaticResource SecondaryDashboardButton}" Command="{Binding LoadImageCommand}" Padding="10,5" Margin="0,0,10,0">
                                     <StackPanel Orientation="Horizontal">
@@ -380,44 +459,36 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Канвас + изображение -->
-                        <Border Grid.Row="1" BorderBrush="#E0E5ED" BorderThickness="1" CornerRadius="8" Background="White">
-                            <Grid>
-                                <!-- Фоновое изображение -->
-                                <Image Source="{Binding CurrentProject.ImagePath}"
-                                       Stretch="{Binding FitImageToCanvas, Converter={StaticResource BooleanToStretchConverter}}"
-                                       HorizontalAlignment="Left" VerticalAlignment="Top"/>
-
-                                <!-- ScrollViewer с Canvas для элементов -->
-                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl x:Name="MainItemsControl" ItemsSource="{Binding CurrentProject.Elements}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <Canvas Width="800" Height="600" Background="Transparent"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemContainerStyle>
-                                            <Style TargetType="ContentPresenter">
-                                                <Setter Property="Canvas.Left" Value="{Binding X}"/>
-                                                <Setter Property="Canvas.Top" Value="{Binding Y}"/>
-                                            </Style>
-                                        </ItemsControl.ItemContainerStyle>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border BorderBrush="#4361EE" BorderThickness="2"
-                                                        Background="#4895EF" Opacity="0.9"
-                                                        Width="{Binding Width}" Height="{Binding Height}"
-                                                        MouseLeftButtonDown="Border_MouseLeftButtonDown"
-                                                        Cursor="Hand" CornerRadius="6">
-                                                    <TextBlock Text="{Binding DisplayName}"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                               Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                            </Grid>
+                        <!-- Канвас с фоном для изображения (без отдельного Image) -->
+                        <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Background="White">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="MainItemsControl" ItemsSource="{Binding CurrentProject.Elements}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas x:Name="LayoutCanvas" Width="800" Height="600" Background="Transparent"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                            <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{StaticResource PrimaryBrush}" BorderThickness="2"
+                                                    Background="{StaticResource PrimaryLightBrush}" Opacity="0.9"
+                                                    Width="{Binding Width}" Height="{Binding Height}"
+                                                    MouseLeftButtonDown="Border_MouseLeftButtonDown"
+                                                    Cursor="Hand" CornerRadius="6">
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Foreground="White" FontSize="12" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
                         </Border>
                     </Grid>
                 </Border>
@@ -425,15 +496,15 @@
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" Background="Transparent" Margin="0"/>
 
                 <!-- Selected Element Card -->
-                <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Padding="20" Margin="0,0,0,15">
+                <Border Grid.Column="2" Style="{StaticResource DashboardCard}" Padding="20">
                     <StackPanel>
                         <TextBlock Text="🔹 Выбранный элемент" Style="{StaticResource CardHeaderText}"/>
-                        <!-- Элементы, доступные только при выбранном элементе -->
                         <StackPanel IsEnabled="{Binding SelectedElement, Converter={StaticResource IsNotNullConverter}}">
-                            <TextBlock Text="Тип элемента" Foreground="#8D99AE" FontSize="12" Margin="0,0,0,3"/>
+                            <TextBlock Text="Тип элемента" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12" Margin="0,0,0,3"/>
                             <ComboBox ItemsSource="{Binding ElementTypes}"
                                       DisplayMemberPath="DisplayName"
-                                      SelectedItem="{Binding SelectedElementType}"
+                                      SelectedItem="{Binding SelectedElementType, ValidatesOnDataErrors=True}"
+                                      Style="{StaticResource ValidatingComboBox}"
                                       Margin="0,0,0,15" Padding="8,5"/>
                             <CheckBox IsChecked="{Binding SelectedElement.HasAnimation}"
                                       Content="Анимация (x1.5)" Margin="0,0,0,15"/>
@@ -443,14 +514,14 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,5,10">
-                                    <TextBlock Text="X" Foreground="#8D99AE" FontSize="12"/>
-                                    <TextBox Text="{Binding SelectedElement.X, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}"/>
+                                    <TextBlock Text="X" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                    <TextBox Text="{Binding SelectedElement.X, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                             Style="{StaticResource ValidatingTextBox}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="5,0,0,10">
-                                    <TextBlock Text="Y" Foreground="#8D99AE" FontSize="12"/>
-                                    <TextBox Text="{Binding SelectedElement.Y, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}"/>
+                                    <TextBlock Text="Y" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                    <TextBox Text="{Binding SelectedElement.Y, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                             Style="{StaticResource ValidatingTextBox}"/>
                                 </StackPanel>
                             </Grid>
                             <Grid>
@@ -459,19 +530,18 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,5,0">
-                                    <TextBlock Text="Width" Foreground="#8D99AE" FontSize="12"/>
-                                    <TextBox Text="{Binding SelectedElement.Width, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}"/>
+                                    <TextBlock Text="Width" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                    <TextBox Text="{Binding SelectedElement.Width, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                             Style="{StaticResource ValidatingTextBox}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="5,0,0,0">
-                                    <TextBlock Text="Height" Foreground="#8D99AE" FontSize="12"/>
-                                    <TextBox Text="{Binding SelectedElement.Height, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}"/>
+                                    <TextBlock Text="Height" Foreground="{StaticResource SecondaryTextBrush}" FontSize="12"/>
+                                    <TextBox Text="{Binding SelectedElement.Height, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                             Style="{StaticResource ValidatingTextBox}"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
 
-                        <!-- Кнопки Add и Remove всегда доступны (Remove зависит от команды) -->
                         <Grid Margin="0,15,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

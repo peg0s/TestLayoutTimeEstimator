@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace TestLayoutTimeEstimator.Models
 {
-    public class LayoutElement : INotifyPropertyChanged
+    public class LayoutElement : INotifyPropertyChanged, IDataErrorInfo
     {
         private string _type;
         private bool _hasAnimation;
@@ -110,6 +110,64 @@ namespace TestLayoutTimeEstimator.Models
         }
 
         public string DisplayName => $"{Type} ({X:F0}, {Y:F0})";
+
+        // Реализация IDataErrorInfo
+        public string Error => null; // Не используется, можно вернуть null
+
+        public string this[string columnName]
+        {
+            get
+            {
+                string error = null;
+
+                switch (columnName)
+                {
+                    case nameof(X):
+                        if (double.IsNaN(X) || double.IsInfinity(X))
+                            error = "Координата X должна быть числом";
+                        // Допустимый диапазон от 0 до 5000 (можно настроить)
+                        else if (X < 0)
+                            error = "Координата X не может быть отрицательной";
+                        else if (X > 5000)
+                            error = "Координата X не может превышать 5000";
+                        break;
+
+                    case nameof(Y):
+                        if (double.IsNaN(Y) || double.IsInfinity(Y))
+                            error = "Координата Y должна быть числом";
+                        else if (Y < 0)
+                            error = "Координата Y не может быть отрицательной";
+                        else if (Y > 5000)
+                            error = "Координата Y не может превышать 5000";
+                        break;
+
+                    case nameof(Width):
+                        if (double.IsNaN(Width) || double.IsInfinity(Width))
+                            error = "Ширина должна быть числом";
+                        else if (Width <= 0)
+                            error = "Ширина должна быть положительной";
+                        else if (Width > 2000)
+                            error = "Ширина не может превышать 2000";
+                        break;
+
+                    case nameof(Height):
+                        if (double.IsNaN(Height) || double.IsInfinity(Height))
+                            error = "Высота должна быть числом";
+                        else if (Height <= 0)
+                            error = "Высота должна быть положительной";
+                        else if (Height > 2000)
+                            error = "Высота не может превышать 2000";
+                        break;
+
+                    case nameof(Type):
+                        if (string.IsNullOrWhiteSpace(Type))
+                            error = "Тип элемента не может быть пустым";
+                        break;
+                }
+
+                return error;
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName) =>
