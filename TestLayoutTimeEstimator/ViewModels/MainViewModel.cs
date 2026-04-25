@@ -23,7 +23,8 @@ namespace TestLayoutTimeEstimator.ViewModels
         private double _totalScore;
         private string _statusMessage;
         private bool _fitImageToCanvas = true;
-        private bool _isDirty; // Флаг несохранённых изменений 
+        private bool _isSelectionMode = false;   // по умолчанию режим перемещения
+        private bool _isDirty;
 
         private readonly IDatabaseService _databaseService;
         private PropertyChangedEventHandler _projectPropertyChangedHandler;
@@ -38,6 +39,7 @@ namespace TestLayoutTimeEstimator.ViewModels
         public ICommand LoadProjectCommand { get; }
         public ICommand ClearAllCommand { get; }
         public ICommand NewProjectCommand { get; }
+        public ICommand ToggleModeCommand { get; }
 
         public MainViewModel()
         {
@@ -48,7 +50,6 @@ namespace TestLayoutTimeEstimator.ViewModels
             _currentProject = new ProjectEstimation { Name = "Новый проект" };
             SubscribeToProjectEvents();
 
-            // Команды
             AddElementCommand = new RelayCommand(AddElement, CanAddElement);
             RemoveElementCommand = new RelayCommand(RemoveElement, CanRemoveElement);
             LoadImageCommand = new RelayCommand(LoadImage);
@@ -57,9 +58,10 @@ namespace TestLayoutTimeEstimator.ViewModels
             LoadProjectCommand = new RelayCommand(LoadProject);
             ClearAllCommand = new RelayCommand(ClearAll);
             NewProjectCommand = new RelayCommand(NewProject);
+            ToggleModeCommand = new RelayCommand(_ => IsSelectionMode = !IsSelectionMode);
 
             Recalculate();
-            IsDirty = false; // Начальное состояние — чистое
+            IsDirty = false;
         }
 
         // ===== Свойства =====
@@ -70,22 +72,18 @@ namespace TestLayoutTimeEstimator.ViewModels
             set
             {
                 if (_currentProject == value) return;
-
                 if (_currentProject != null)
                 {
                     _currentProject.PropertyChanged -= _projectPropertyChangedHandler;
                     _currentProject.Elements.CollectionChanged -= _elementsCollectionChangedHandler;
                     UnsubscribeFromElements();
                 }
-
                 _currentProject = value;
-
                 if (_currentProject != null)
                 {
                     SubscribeToProjectEvents();
                     SubscribeToElements();
                 }
-
                 OnPropertyChanged(nameof(CurrentProject));
                 OnPropertyChanged(nameof(CurrentProject.ImagePath));
                 OnPropertyChanged(nameof(ElementsCount));
@@ -99,17 +97,10 @@ namespace TestLayoutTimeEstimator.ViewModels
             set
             {
                 if (_selectedElement == value) return;
-
-                if (_selectedElement != null)
-                    _selectedElement.IsSelected = false;
-
+                if (_selectedElement != null) _selectedElement.IsSelected = false;
                 _selectedElement = value;
-
-                if (_selectedElement != null)
-                    _selectedElement.IsSelected = true;
-
+                if (_selectedElement != null) _selectedElement.IsSelected = true;
                 OnPropertyChanged(nameof(SelectedElement));
-
                 if (_selectedElement != null && _elementTypes != null)
                     SelectedElementType = _elementTypes.FirstOrDefault(et => et.Name == _selectedElement.Type);
                 else
@@ -125,13 +116,12 @@ namespace TestLayoutTimeEstimator.ViewModels
                 if (value == _selectedElementType) return;
                 _selectedElementType = value;
                 OnPropertyChanged(nameof(SelectedElementType));
-
                 if (_selectedElement != null && _selectedElementType != null)
                 {
                     if (_selectedElement.Type != _selectedElementType.Name)
                     {
                         _selectedElement.Type = _selectedElementType.Name;
-                        IsDirty = true; // Изменение типа элемента
+                        IsDirty = true;
                     }
                 }
             }
@@ -140,21 +130,13 @@ namespace TestLayoutTimeEstimator.ViewModels
         public ObservableCollection<ElementType> ElementTypes
         {
             get => _elementTypes;
-            set
-            {
-                _elementTypes = value;
-                OnPropertyChanged(nameof(ElementTypes));
-            }
+            set { _elementTypes = value; OnPropertyChanged(nameof(ElementTypes)); }
         }
 
         public ObservableCollection<ComplexityCategory> ComplexityCategories
         {
             get => _complexityCategories;
-            set
-            {
-                _complexityCategories = value;
-                OnPropertyChanged(nameof(ComplexityCategories));
-            }
+            set { _complexityCategories = value; OnPropertyChanged(nameof(ComplexityCategories)); }
         }
 
         public ComplexityCategory CurrentComplexityCategory
@@ -170,21 +152,24 @@ namespace TestLayoutTimeEstimator.ViewModels
         public double TotalHours
         {
             get => _totalHours;
-            set
-            {
-                _totalHours = value;
-                OnPropertyChanged(nameof(TotalHours));
-                OnPropertyChanged(nameof(DisplayTime));
-            }
+            set { _totalHours = value; OnPropertyChanged(nameof(TotalHours)); OnPropertyChanged(nameof(DisplayTime)); }
         }
 
         public double TotalScore
         {
             get => _totalScore;
+            set { _totalScore = value; OnPropertyChanged(nameof(TotalScore)); }
+        }
+
+        public bool IsSelectionMode
+        {
+            get => _isSelectionMode;
             set
             {
-                _totalScore = value;
-                OnPropertyChanged(nameof(TotalScore));
+                if (_isSelectionMode == value) return;
+                _isSelectionMode = value;
+                OnPropertyChanged(nameof(IsSelectionMode));
+                StatusMessage = value ? "✏️ Режим выделения: нарисуйте прямоугольник на холсте" : "🖱️ Режим перемещения: перетаскивайте элементы";
             }
         }
 
@@ -213,16 +198,9 @@ namespace TestLayoutTimeEstimator.ViewModels
         public bool FitImageToCanvas
         {
             get => _fitImageToCanvas;
-            set
-            {
-                _fitImageToCanvas = value;
-                OnPropertyChanged(nameof(FitImageToCanvas));
-            }
+            set { _fitImageToCanvas = value; OnPropertyChanged(nameof(FitImageToCanvas)); }
         }
 
-        /// <summary>
-        /// Флаг наличия несохранённых изменений
-        /// </summary>
         public bool IsDirty
         {
             get => _isDirty;
@@ -232,14 +210,11 @@ namespace TestLayoutTimeEstimator.ViewModels
                 {
                     _isDirty = value;
                     OnPropertyChanged(nameof(IsDirty));
-                    OnPropertyChanged(nameof(WindowTitle)); // Обновляем заголовок окна
+                    OnPropertyChanged(nameof(WindowTitle));
                 }
             }
         }
 
-        /// <summary>
-        /// Заголовок окна с индикатором несохранённых изменений
-        /// </summary>
         public string WindowTitle => IsDirty ? $"{CurrentProject?.Name}* - Layout Time Estimator" : $"{CurrentProject?.Name} - Layout Time Estimator";
 
         // ===== Подписки на события =====
@@ -248,9 +223,7 @@ namespace TestLayoutTimeEstimator.ViewModels
         {
             _projectPropertyChangedHandler = (s, e) =>
             {
-                // Любое изменение свойств проекта помечает его как изменённый
                 IsDirty = true;
-
                 if (e.PropertyName == nameof(ProjectEstimation.AdaptivityMultiplier) ||
                     e.PropertyName == nameof(ProjectEstimation.HoursPerPoint) ||
                     e.PropertyName == nameof(ProjectEstimation.BaseHours))
@@ -263,27 +236,22 @@ namespace TestLayoutTimeEstimator.ViewModels
                 }
                 else if (e.PropertyName == nameof(ProjectEstimation.Name))
                 {
-                    OnPropertyChanged(nameof(WindowTitle)); // Обновляем заголовок при смене имени
+                    OnPropertyChanged(nameof(WindowTitle));
                 }
             };
 
             _elementsCollectionChangedHandler = (s, e) =>
             {
-                IsDirty = true; // Добавление/удаление элементов
-
+                IsDirty = true;
                 if (e.NewItems != null)
                 {
                     foreach (LayoutElement element in e.NewItems)
-                    {
                         element.PropertyChanged += _elementPropertyChangedHandler;
-                    }
                 }
                 if (e.OldItems != null)
                 {
                     foreach (LayoutElement element in e.OldItems)
-                    {
                         element.PropertyChanged -= _elementPropertyChangedHandler;
-                    }
                 }
                 Recalculate();
                 OnPropertyChanged(nameof(ElementsCount));
@@ -291,8 +259,7 @@ namespace TestLayoutTimeEstimator.ViewModels
 
             _elementPropertyChangedHandler = (s, e) =>
             {
-                IsDirty = true; // Изменение свойств элемента
-
+                IsDirty = true;
                 if (e.PropertyName == nameof(LayoutElement.Type) ||
                     e.PropertyName == nameof(LayoutElement.HasAnimation) ||
                     e.PropertyName == nameof(LayoutElement.X) ||
@@ -311,40 +278,25 @@ namespace TestLayoutTimeEstimator.ViewModels
         private void SubscribeToElements()
         {
             foreach (var element in _currentProject.Elements)
-            {
                 element.PropertyChanged += _elementPropertyChangedHandler;
-            }
         }
 
         private void UnsubscribeFromElements()
         {
             if (_currentProject != null)
-            {
                 foreach (var element in _currentProject.Elements)
-                {
                     element.PropertyChanged -= _elementPropertyChangedHandler;
-                }
-            }
         }
 
         // ===== Методы команд =====
 
         private void AddElement(object parameter)
         {
-            var element = new LayoutElement
-            {
-                Type = "Текст",
-                X = 50,
-                Y = 50,
-                Width = 100,
-                Height = 30
-            };
+            var element = new LayoutElement { Type = "Текст", X = 50, Y = 50, Width = 100, Height = 30 };
             CurrentProject.Elements.Add(element);
             SelectedElement = element;
             StatusMessage = $"Добавлен элемент: {element.DisplayName}";
-            // IsDirty уже устанавливается в обработчике CollectionChanged
         }
-
         private bool CanAddElement(object parameter) => CurrentProject != null;
 
         private void RemoveElement(object parameter)
@@ -355,10 +307,8 @@ namespace TestLayoutTimeEstimator.ViewModels
                 CurrentProject.Elements.Remove(SelectedElement);
                 SelectedElement = CurrentProject.Elements.FirstOrDefault();
                 StatusMessage = $"Элемент удалён: {elementName}";
-                // IsDirty уже устанавливается в обработчике CollectionChanged
             }
         }
-
         private bool CanRemoveElement(object parameter) => SelectedElement != null;
 
         private void LoadImage(object parameter)
@@ -373,7 +323,6 @@ namespace TestLayoutTimeEstimator.ViewModels
                 CurrentProject.ImagePath = dialog.FileName;
                 StatusMessage = $"Загружено изображение: {System.IO.Path.GetFileName(dialog.FileName)}";
                 OnPropertyChanged(nameof(CurrentProject));
-                // IsDirty уже устанавливается в обработчике PropertyChanged проекта
             }
         }
 
@@ -384,7 +333,6 @@ namespace TestLayoutTimeEstimator.ViewModels
                 CurrentProject.ImagePath = null;
                 StatusMessage = "Изображение удалено";
                 OnPropertyChanged(nameof(CurrentProject));
-                // IsDirty уже устанавливается в обработчике PropertyChanged проекта
             }
         }
 
@@ -401,7 +349,7 @@ namespace TestLayoutTimeEstimator.ViewModels
                 try
                 {
                     await ProjectFileService.SaveProjectAsync(dialog.FileName, CurrentProject);
-                    IsDirty = false; // Сбрасываем флаг после успешного сохранения
+                    IsDirty = false;
                     StatusMessage = $"Проект сохранён: {dialog.FileName}";
                 }
                 catch (Exception ex)
@@ -413,7 +361,6 @@ namespace TestLayoutTimeEstimator.ViewModels
 
         private async void LoadProject(object parameter)
         {
-            // Проверяем наличие несохранённых изменений
             if (IsDirty)
             {
                 var result = MessageBox.Show(
@@ -421,21 +368,12 @@ namespace TestLayoutTimeEstimator.ViewModels
                     "Несохранённые изменения",
                     MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Question);
-
                 if (result == MessageBoxResult.Yes)
                 {
                     SaveProjectCommand.Execute(null);
-                    // Если сохранение отменено или не удалось, продолжаем или выходим
-                    if (IsDirty) // Если после сохранения флаг остался true — значит, сохранение отменено
-                    {
-                        return;
-                    }
+                    if (IsDirty) return;
                 }
-                else if (result == MessageBoxResult.Cancel)
-                {
-                    return; // Отменяем загрузку
-                }
-                // Если No — продолжаем без сохранения
+                else if (result == MessageBoxResult.Cancel) return;
             }
 
             var dialog = new OpenFileDialog
@@ -449,7 +387,7 @@ namespace TestLayoutTimeEstimator.ViewModels
                 {
                     var project = await ProjectFileService.LoadProjectAsync(dialog.FileName);
                     CurrentProject = project;
-                    IsDirty = false; // Загруженный проект считается чистым
+                    IsDirty = false;
                     StatusMessage = $"Проект загружен: {dialog.FileName}";
                 }
                 catch (Exception ex)
@@ -463,24 +401,18 @@ namespace TestLayoutTimeEstimator.ViewModels
         {
             if (CurrentProject.Elements.Any())
             {
-                var result = MessageBox.Show(
-                    "Удалить все элементы с макета?",
-                    "Подтверждение",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                var result = MessageBox.Show("Удалить все элементы с макета?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
                     CurrentProject.Elements.Clear();
                     SelectedElement = null;
                     StatusMessage = "Все элементы удалены";
-                    // IsDirty уже устанавливается в обработчике CollectionChanged
                 }
             }
         }
 
         private void NewProject(object parameter)
         {
-            // Проверяем наличие несохранённых изменений
             if (IsDirty)
             {
                 var result = MessageBox.Show(
@@ -488,31 +420,21 @@ namespace TestLayoutTimeEstimator.ViewModels
                     "Несохранённые изменения",
                     MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Question);
-
                 if (result == MessageBoxResult.Yes)
                 {
                     SaveProjectCommand.Execute(null);
-                    if (IsDirty) // Сохранение отменено
-                    {
-                        return;
-                    }
+                    if (IsDirty) return;
                 }
-                else if (result == MessageBoxResult.Cancel)
-                {
-                    return; // Отменяем создание нового проекта
-                }
+                else if (result == MessageBoxResult.Cancel) return;
             }
-
-            var newProject = new ProjectEstimation { Name = "Новый проект" };
-            CurrentProject = newProject;
-            IsDirty = false; // Новый проект считается чистым
+            CurrentProject = new ProjectEstimation { Name = "Новый проект" };
+            IsDirty = false;
             StatusMessage = "Создан новый проект";
         }
 
         private void Recalculate()
         {
             if (CurrentProject == null) return;
-
             try
             {
                 double totalScore = 0;
@@ -526,13 +448,8 @@ namespace TestLayoutTimeEstimator.ViewModels
                     }
                 }
                 TotalScore = Math.Round(totalScore, 2);
-
-                double hours = totalScore *
-                    CurrentProject.AdaptivityMultiplier *
-                    CurrentProject.HoursPerPoint +
-                    CurrentProject.BaseHours;
+                double hours = totalScore * CurrentProject.AdaptivityMultiplier * CurrentProject.HoursPerPoint + CurrentProject.BaseHours;
                 TotalHours = Math.Round(hours, 2);
-
                 UpdateComplexityCategory();
                 StatusMessage = $"Расчёт выполнен. Всего элементов: {ElementsCount}";
             }
@@ -545,15 +462,9 @@ namespace TestLayoutTimeEstimator.ViewModels
         private void UpdateComplexityCategory()
         {
             if (CurrentProject == null || _complexityCategories == null) return;
-
-            var category = _complexityCategories
-                .FirstOrDefault(c => c.MinScore <= TotalScore &&
-                    (c.MaxScore == null || TotalScore <= c.MaxScore));
+            var category = _complexityCategories.FirstOrDefault(c => c.MinScore <= TotalScore && (c.MaxScore == null || TotalScore <= c.MaxScore));
             if (category != null)
-            {
                 CurrentProject.ComplexityCategoryId = category.Id;
-            }
-
             OnPropertyChanged(nameof(CurrentComplexityCategory));
         }
 
@@ -583,7 +494,6 @@ namespace TestLayoutTimeEstimator.ViewModels
             };
         }
 
-        // ===== INotifyPropertyChanged =====
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
