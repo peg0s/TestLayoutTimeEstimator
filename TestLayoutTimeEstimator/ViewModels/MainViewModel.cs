@@ -328,17 +328,38 @@ namespace TestLayoutTimeEstimator.ViewModels
                 OnPropertyChanged(nameof(CurrentProject));
             }
         }
-        private void EditScores(object parameter)
+        private async void EditScores(object parameter)
         {
-            var dialog = new EditScoresWindow(_elementTypes);
+            var copyTypes = new ObservableCollection<ElementType>(
+                _elementTypes.Select(et => new ElementType
+                {
+                    Id = et.Id,
+                    Name = et.Name,
+                    BaseScore = et.BaseScore,
+                    Category = et.Category,
+                    Description = et.Description
+                }));
+
+            var dialog = new EditScoresWindow(copyTypes);
             if (dialog.ShowDialog() == true)
             {
-                // Обновляем коллекцию ElementTypes из диалога
-                ElementTypes = new ObservableCollection<ElementType>(dialog.ElementTypes);
-                // Сохраняем изменения в базу данных (опционально)
-                // После изменения баллов пересчитываем время
+                // Обновляем оригинальную коллекцию
+                for (int i = 0; i < _elementTypes.Count; i++)
+                {
+                    _elementTypes[i].BaseScore = dialog.ElementTypes[i].BaseScore;
+                    await _databaseService.SaveElementTypeAsync(_elementTypes[i]);
+                }
+                // Добавляем новые типы (которых не было в оригинале)
+                foreach (var newType in dialog.ElementTypes)
+                {
+                    if (!_elementTypes.Any(et => et.Id == newType.Id))
+                    {
+                        _elementTypes.Add(newType);
+                        await _databaseService.SaveElementTypeAsync(newType);
+                    }
+                }
                 Recalculate();
-                StatusMessage = "Баллы типов элементов обновлены";
+                StatusMessage = "Баллы типов элементов сохранены";
             }
         }
 
