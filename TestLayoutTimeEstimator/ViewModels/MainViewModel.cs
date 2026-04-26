@@ -1,14 +1,15 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.Win32;
 using TestLayoutTimeEstimator.Models;
 using TestLayoutTimeEstimator.Services;
 using TestLayoutTimeEstimator.Utilities;
+using TestLayoutTimeEstimator.Views;
 
 namespace TestLayoutTimeEstimator.ViewModels
 {
@@ -40,6 +41,7 @@ namespace TestLayoutTimeEstimator.ViewModels
         public ICommand ClearAllCommand { get; }
         public ICommand NewProjectCommand { get; }
         public ICommand ToggleModeCommand { get; }
+        public ICommand EditScoresCommand { get; }
 
         public MainViewModel()
         {
@@ -59,6 +61,7 @@ namespace TestLayoutTimeEstimator.ViewModels
             ClearAllCommand = new RelayCommand(ClearAll);
             NewProjectCommand = new RelayCommand(NewProject);
             ToggleModeCommand = new RelayCommand(_ => IsSelectionMode = !IsSelectionMode);
+            EditScoresCommand = new RelayCommand(EditScores);
 
             Recalculate();
             IsDirty = false;
@@ -323,6 +326,19 @@ namespace TestLayoutTimeEstimator.ViewModels
                 CurrentProject.ImagePath = dialog.FileName;
                 StatusMessage = $"Загружено изображение: {System.IO.Path.GetFileName(dialog.FileName)}";
                 OnPropertyChanged(nameof(CurrentProject));
+            }
+        }
+        private void EditScores(object parameter)
+        {
+            var dialog = new EditScoresWindow(_elementTypes);
+            if (dialog.ShowDialog() == true)
+            {
+                // Обновляем коллекцию ElementTypes из диалога
+                ElementTypes = new ObservableCollection<ElementType>(dialog.ElementTypes);
+                // Сохраняем изменения в базу данных (опционально)
+                // После изменения баллов пересчитываем время
+                Recalculate();
+                StatusMessage = "Баллы типов элементов обновлены";
             }
         }
 
